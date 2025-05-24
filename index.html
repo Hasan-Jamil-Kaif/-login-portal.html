@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TIME PASS</title>
+  <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+  <style>
+
+    body {
+      margin: 0;
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+    }
+
+
+    .form-container {
+      width: 360px;
+      background-color: #fff;
+      padding: 32px 24px;
+      font-size: 14px;
+      color: #212121;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      border-radius: 12px;
+      box-shadow: 0 6px 18px rgba(0, 0, 0, 0.15);
+      box-sizing: border-box;
+    }
+
+    /* Header text */
+    .logo-container {
+      text-align: center;
+      font-weight: 600;
+      font-size: 20px;
+    }
+
+    /* Form styling */
+    .form {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .form-group label {
+      font-weight: 500;
+      font-size: 14px;
+    }
+
+    .form-group input {
+      padding: 12px 16px;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+      font-size: 14px;
+      transition: border-color 0.2s ease-in-out;
+    }
+
+    .form-group input:focus {
+      border-color: #1778f2;
+      outline: none;
+    }
+
+    .form-group input::placeholder {
+      opacity: 0.5;
+    }
+
+    /* Button styling */
+    .form-submit-btn {
+      background-color: #212121;
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      padding: 12px 16px;
+      font-weight: 500;
+      font-size: 14px;
+      cursor: pointer;
+      margin-top: 12px;
+      transition: background-color 0.2s ease-in-out;
+    }
+
+    .form-submit-btn:hover {
+      background-color: #333333;
+    }
+
+    /* Signup link */
+    .signup-link {
+      text-align: center;
+      font-size: 14px;
+      font-weight: 500;
+    }
+
+    .signup-link .link {
+      color: #1778f2;
+      font-weight: 400;
+      text-decoration: none;
+    }
+
+    .signup-link .link:hover {
+      text-decoration: underline;
+    }
+
+    /* Additional styles for error handling */
+    .error-message {
+      color: #d32f2f;
+      font-size: 12px;
+      margin-top: 4px;
+    }
+
+    .success-message {
+      color: #388e3c;
+      text-align: center;
+      font-weight: 500;
+      margin-top: 10px;
+    }
+
+    .form-submit-btn:disabled {
+      background-color: #cccccc;
+      cursor: not-allowed;
+    }
+
+    .input-error {
+      border-color: #d32f2f !important;
+    }
+
+    .bg-video {
+      position: fixed;
+      top: 0;
+      left: 0;
+      min-width: 100vw;
+      min-height: 100vh;
+      width: 100vw;
+      height: 100vh;
+      z-index: -2;
+      object-fit: cover;
+      background: #000;
+    }
+
+    .bg {
+      display: none; /* Hide the gradient overlay */
+    }
+
+    #app {
+      position: relative;
+      z-index: 1;
+    }
+  </style>
+</head>
+<body>
+  <!-- Video background -->
+  <video
+    id="bgVideo"
+    autoplay
+    muted
+    loop
+    playsinline
+    class="bg-video"
+    style="filter: brightness(1); transition: filter 1s; width:100vw; height:100vh; object-fit:cover;"
+  >
+    <source src="./video_25fps.mp4" type="video/mp4">
+    <!-- Optionally add a fallback image or message here -->
+  </video>
+  <div class="bg"></div>
+  <div id="app">
+    <div class="form-container">
+      <div class="logo-container">
+        Forgot Password
+      </div>
+      <form class="form" @submit.prevent="handleSubmit">
+        <div class="form-group">
+          <label for="username">Username</label>
+          <input 
+            type="text" 
+            id="username" 
+            name="username" 
+            v-model="username"
+            placeholder="Enter your username" 
+            required
+          >
+        </div>
+        <div class="form-group">
+          <label for="email">Email</label>
+          <input 
+            type="email" 
+            id="email" 
+            name="email" 
+            v-model="email"
+            placeholder="Enter your email" 
+            required
+            :class="{ 'input-error': errorMessage }"
+            @blur="validateEmail"
+          >
+          <span class="error-message" v-if="errorMessage">{{ errorMessage }}</span>
+        </div>
+        <button class="form-submit-btn" type="submit" :disabled="isSubmitting">
+          {{ isSubmitting ? 'Sending...' : 'Send Email' }}
+        </button>
+      </form>
+      <p class="success-message" v-if="successMessage">
+        {{ successMessage }}
+      </p>
+      <p class="signup-link">
+        Don't have an account?
+        <a href="#" class="link">Sign up now</a>
+      </p>
+    </div>
+  </div>
+  <script>
+    const { createApp } = Vue;
+
+    createApp({
+      data() {
+        return {
+          username: '',
+          email: '',
+          errorMessage: '',
+          successMessage: '',
+          isSubmitting: false
+        }
+      },
+      methods: {
+        validateEmail() {
+          const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+          if (!this.email) {
+            this.errorMessage = 'Email is required';
+          } else if (!emailRegex.test(this.email)) {
+            this.errorMessage = 'Please enter a valid email address';
+          } else {
+            this.errorMessage = '';
+          }
+        },
+        handleSubmit() {
+          this.validateEmail();
+          if (this.errorMessage) return;
+          if (!this.username) {
+            this.errorMessage = 'Username is required';
+            return;
+          }
+          this.isSubmitting = true;
+
+          // Simulate API call
+          setTimeout(() => {
+            this.successMessage = `Password reset link has been sent to ${this.username} (${this.email})`;
+            this.isSubmitting = false;
+            this.email = '';
+            this.username = '';
+
+            // Reset success message after 5 seconds
+            setTimeout(() => {
+              this.successMessage = '';
+            }, 5000);
+          }, 1500);
+        }
+      }
+    }).mount('#app');
+
+    // Slow down the video playback
+    const video = document.getElementById('bgVideo');
+    video.playbackRate = 0.5; // 0.5x speed for slow motion
+  </script>
+</body>
+</html>
